@@ -3,7 +3,7 @@ version: "3"
 services:
 
   radius-mysql:
-    image: mariadb:10
+    image: mariadb:10.5
     container_name: radius-mysql
     restart: unless-stopped
     environment:
@@ -20,7 +20,7 @@ services:
       context: .
       dockerfile: Dockerfile-freeradius
     restart: unless-stopped
-    depends_on: 
+    depends_on:
       - radius-mysql
     ports:
       - '1812:1812/udp'
@@ -33,6 +33,7 @@ services:
       - MYSQL_PASSWORD=radiusdbpw
       # Optional settings
       - DEFAULT_CLIENT_SECRET=testing123
+      - DEFAULT_CLIENT_IP=192.168.86.46
     volumes:
       - ./data/freeradius:/data
     # If you want to disable debug output, remove the command parameter

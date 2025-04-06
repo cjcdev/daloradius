@@ -36,6 +36,18 @@ function init_freeradius {
 		sed -i 's|testing123|'$DEFAULT_CLIENT_SECRET'|' $RADIUS_PATH/mods-available/sql
 	fi
 	echo "freeradius initialization completed."
+
+	# configure client (AP)
+cat <<EOF >> $RADIUS_PATH/clients.conf
+
+clients per_socket_clients {
+        client socket_client {
+                ipaddr = ${DEFAULT_CLIENT_IP}
+                secret = ${DEFAULT_CLIENT_SECRET}
+        }
+}
+EOF
+
 }
 
 function init_database {
@@ -43,15 +55,15 @@ function init_database {
 	mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" < $RADIUS_PATH/mods-config/sql/ippool/mysql/schema.sql
 
 	# Insert a client for the current subnet (to allow daloradius to perform checks)
-	IP=`ifconfig eth0 | awk '/inet/{ print $2;} '` # does also work: $IP=`hostname -I | awk '{print $1}'`
-	NM=`ifconfig eth0 | awk '/netmask/{ print $4;} '`
-	CIDR=`ipcalc $IP $NM | awk '/Network/{ print $2;} '`
-	SECRET=testing123
-	if [ -n "$DEFAULT_CLIENT_SECRET" ]; then
-		SECRET=$DEFAULT_CLIENT_SECRET
-	fi
-	echo "Adding client for $CIDR with default secret $SECRET"
-	mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" -e "INSERT INTO nas (nasname,shortname,type,ports,secret,server,community,description) VALUES ('$CIDR','DOCKER NET','other',0,'$SECRET',NULL,'','')"
+	# IP=`ifconfig eth0 | awk '/inet/{ print $2;} '` # does also work: $IP=`hostname -I | awk '{print $1}'`
+	# NM=`ifconfig eth0 | awk '/netmask/{ print $4;} '`
+	# CIDR=`ipcalc $IP $NM | awk '/Network/{ print $2;} '`
+	# SECRET=testing123
+	# if [ -n "$DEFAULT_CLIENT_SECRET" ]; then
+	# 	SECRET=$DEFAULT_CLIENT_SECRET
+	# fi
+	# echo "Adding client for $CIDR with default secret $SECRET"
+	# mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" -e "INSERT INTO nas (nasname,shortname,type,ports,secret,server,community,description) VALUES ('$CIDR','DOCKER NET','other',0,'$SECRET',NULL,'','')"
 
 	echo "Database initialization for freeradius completed."
 }
